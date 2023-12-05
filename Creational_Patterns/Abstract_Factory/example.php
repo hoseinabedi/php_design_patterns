@@ -2,7 +2,7 @@
 interface TemplateFactory{
     public function createTitleTemplate(): TitleTemplate;
     public function createPageTemplate(): PageTemplate;
-    public function getRender(): TemplateRender;
+    public function getRenderer(): TemplateRenderer;
 }
 
 class TwigTemplateFactory implements TemplateFactory{
@@ -11,11 +11,25 @@ class TwigTemplateFactory implements TemplateFactory{
     }
 
     public function createPageTemplate(): PageTemplate{
-        return new TwigPageTemplate();
+        return new TwigPageTemplate($this->createTitleTemplate());
     }
 
-    public function getRender(): TemplateRender{
+    public function getRenderer(): TemplateRenderer{
         return new TwigTemplateRender();
+    }
+}
+
+class PHPTemplateFactory implements TemplateFactory{
+    public function createTitleTemplate(): TitleTemplate{
+        return new TitleTemplate();
+    }
+
+    public function createPageTemplate(): PageTemplate{
+        return new PHPPageTemplate($this->createTitleTemplate());
+    }
+
+    public function getRenderer(): TemplateRenderer{
+        return new PHPTemplateRenderer();
     }
 }
 
@@ -27,7 +41,7 @@ interface PageTemplate{
     public function getTemplateString(): string;
 }
 
-interface TemplateRender{
+interface TemplateRenderer{
     public function render(string $templateString, array $arguments = []): string;
 }
 
@@ -75,13 +89,14 @@ class PHPPageTemplate extends BasePageTemplate{
     }
 }
 
-class TwigTemplateRender implements TemplateRender{
+class TwigTemplateRender implements TemplateRenderer{
     public function render(string $templateString, array $arguments = []): string{
-        return \Twig::render($templateString, $arguments);
+        // return \Twig::render($templateString, $arguments);
+        return '';
     }
 }
 
-class PHPTemplateRenderer implements TemplateRender{
+class PHPTemplateRenderer implements TemplateRenderer{
     public function render(string $templateString, array $arguments = []): string{
         extract($arguments);
 
@@ -93,6 +108,31 @@ class PHPTemplateRenderer implements TemplateRender{
         return $result;
     }
 }
+
+// Client Code
+class Page{
+    public $title;
+
+    public $content;
+
+    public function __construct($title, $content){
+        $this->title = $title;
+        $this->content = $content;
+    }
+
+    public function render(TemplateFactory $factory): string{
+        $pageTemplate = $factory->createPageTemplate();
+        $renderer = $factory->getRenderer();
+        return $renderer->render($pageTemplate->getTemplateString(), [
+            'title' => $this->title,
+            'content' => $this->content
+        ]);
+    }
+}
+
+$page = new Page("Sample Page", "This is the body");
+$page->render(new PHPTemplateFactory());
+
 
 
 
