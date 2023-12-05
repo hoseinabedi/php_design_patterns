@@ -21,7 +21,7 @@ class TwigTemplateFactory implements TemplateFactory{
 
 class PHPTemplateFactory implements TemplateFactory{
     public function createTitleTemplate(): TitleTemplate{
-        return new TitleTemplate();
+        return new PHPTitleTemplate();
     }
 
     public function createPageTemplate(): PageTemplate{
@@ -131,11 +131,5 @@ class Page{
 }
 
 $page = new Page("Sample Page", "This is the body");
-$page->render(new PHPTemplateFactory());
-
-
-
-
-
-
+echo $page->render(new PHPTemplateFactory());
 ?>
